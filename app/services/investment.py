@@ -45,27 +45,27 @@ async def invest(
 
     items_invested = []
 
-    for invt in unclosed_invest_items:
+    for item in unclosed_invest_items:
         if new_invest_item.fully_invested:
             break
 
         required_amount = (new_invest_item.full_amount
                            - new_invest_item.invested_amount)
 
-        invt_avail_amt = invt.full_amount - invt.invested_amount
+        invt_avail_amt = item.full_amount - item.invested_amount
 
         if invt_avail_amt >= required_amount:
             await close_investment_item(new_invest_item)
             print(new_invest_item.fully_invested)
             if invt_avail_amt == required_amount:
-                await close_investment_item(invt)
+                await close_investment_item(item)
             else:
-                invt.invested_amount += required_amount
+                item.invested_amount += required_amount
         else:
-            await close_investment_item(invt)
+            await close_investment_item(item)
             new_invest_item.invested_amount += invt_avail_amt
 
-        items_invested.append(invt)
+        items_invested.append(item)
 
     session.add(new_invest_item)
     session.add_all(items_invested)
