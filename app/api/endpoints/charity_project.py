@@ -1,4 +1,4 @@
-from app.services.investment import check_for_avalaible_investments
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -9,16 +9,19 @@ from app.api.validators import (check_charity_project_exists,
                                 check_proj_new_full_amnt_more_than_invst_amnt)
 from app.core.db import get_async_session
 from app.core.user import current_superuser
-from app.schemas import (CharityPrjectDB, CharityPrjectCreate,
-                         CharityProjectUpdate)
 from app.crud import charity_project_crud
+from app.models import CharityProject
+from app.schemas import (CharityProjectDB, CharityProjectCreate,
+                         CharityProjectUpdate)
+from app.services.investment import invest
+
 
 router = APIRouter()
 
 
 @router.get(
     '/',
-    response_model=list[CharityPrjectDB],
+    response_model=list[CharityProjectDB],
     response_model_exclude_none=True,
 )
 async def get_all_charity_projects(
@@ -30,28 +33,33 @@ async def get_all_charity_projects(
 
 @router.post(
     '/',
-    response_model=CharityPrjectDB,
+    response_model=CharityProjectDB,
     dependencies=[Depends(current_superuser)],
     response_model_exclude_none=True,
 )
 async def create_new_charity_project(
-    charity_project: CharityPrjectCreate,
+    charity_project: CharityProjectCreate,
     session: AsyncSession = Depends(get_async_session),
 ):
     await check_for_name_duplicate(name=charity_project.name, session=session)
 
-    charity_project, donations = await check_for_avalaible_investments(charity_project, session)
+    new_charity_project: CharityProject = await charity_project_crud.create(
+        charity_project,
+        session,
+    )
 
-    if donations:
-        session.add_all(donations)
-    new_project = await charity_project_crud.create(charity_project, session)
+    new_charity_project: CharityProject = await invest(
+        new_invest_item=new_charity_project,
+        item_to_check='donation',
+        session=session,
+    )
 
-    return new_project
+    return new_charity_project
 
 
 @router.delete(
     '/{project_id}',
-    response_model=CharityPrjectDB,
+    response_model=CharityProjectDB,
     dependencies=[Depends(current_superuser)],
 )
 async def remove_charity_project(
@@ -71,7 +79,7 @@ async def remove_charity_project(
 
 @router.patch(
         '/{project_id}',
-        response_model=CharityPrjectDB,
+        response_model=CharityProjectDB,
         dependencies=[Depends(current_superuser)],
     )
 async def update_charity_project(

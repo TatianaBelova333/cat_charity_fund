@@ -11,6 +11,7 @@ class DonationBase(BaseModel):
 
 
 class UserDonationDB(DonationBase):
+    """Donation schema for the current user's donations."""
     id: int
 
     class Config:
@@ -18,6 +19,7 @@ class UserDonationDB(DonationBase):
 
 
 class DonationDB(DonationBase):
+    """Donation schema for the superuser's donations."""
     id: int
     invested_amount: int = 0
     fully_invested: bool = False
@@ -29,17 +31,9 @@ class DonationDB(DonationBase):
 
 
 class DonationCreate(BaseModel):
+    """Donation schema for creating a donation."""
     comment: Optional[str]
     full_amount: int = Field(gt=0)
 
     class Config:
         extra = Extra.forbid
-
-
-class DonationCreateFull(BaseModel):
-    comment: Optional[str]
-    full_amount: int = Field(gt=0)
-    invested_amount: int = 0
-    fully_invested: bool = False
-    create_date: Optional[datetime]
-    close_date: Optional[datetime] = None

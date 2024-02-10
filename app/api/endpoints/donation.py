@@ -4,9 +4,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.db import get_async_session
 from app.core.user import current_user, current_superuser
 from app.crud import donation_crud
-from app.models import User
+from app.models import Donation, User
 from app.schemas import DonationDB, DonationCreate, UserDonationDB
-from app.services.investment import check_for_avalaible_projects
+from app.services.investment import invest
 
 router = APIRouter()
 
@@ -21,14 +21,14 @@ async def create_donation(
         session: AsyncSession = Depends(get_async_session),
         user: User = Depends(current_user),
 ):
-
-    donation, projects = await check_for_avalaible_projects(donation, session)
-
-    if projects:
-        session.add_all(projects)
-
-    new_donation = await donation_crud.create(
+    new_donation: Donation = await donation_crud.create(
         donation, session, user
+    )
+
+    new_donation: Donation = await invest(
+        new_invest_item=new_donation,
+        item_to_check='charity_project',
+        session=session,
     )
 
     return new_donation

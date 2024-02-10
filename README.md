@@ -32,7 +32,7 @@ All users may see charity projects. Only registered users may make untied donati
 
 ## Documenation
 
-http://127.0.0.1:8000/docs - Swagger docs.
+http://127.0.0.1:8000/docs - Swagger docs.\
 http://127.0.0.1:8000/redoc - ReDoc docs.
 
 

@@ -1,45 +1,12 @@
 from datetime import datetime
+from typing import Union
 
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_async_session
-from app.schemas import CharityPrjectCreate, ProjectInvestement, DonationCreate, DonationCreateFull
+from app.models import CharityProject, Donation
 from app.crud import charity_project_crud, donation_crud
-
-
-async def check_for_avalaible_investments(
-        charity_project: CharityPrjectCreate,
-        session: AsyncSession = Depends(get_async_session),
-):
-    available_investments = await donation_crud.get_not_fullyinvested_objs(
-        session=session,
-    )
-
-    charity_project = ProjectInvestement(**charity_project.dict())
-
-    invt_for_update = []
-
-    for invt in available_investments:
-        if charity_project.fully_invested:
-            break
-
-        required_amount = charity_project.full_amount - charity_project.invested_amount
-
-        invt_avail_amt = invt.full_amount - invt.invested_amount
-
-        if invt_avail_amt >= required_amount:
-            await close_investment_item(charity_project)
-            if invt_avail_amt == required_amount:
-                await close_investment_item(invt)
-            else:
-                invt.invested_amount += required_amount
-        else:
-            await close_investment_item(invt)
-            charity_project.invested_amount += invt_avail_amt
-
-        invt_for_update.append(invt)
-    return charity_project, invt_for_update
 
 
 async def close_investment_item(item):
@@ -49,34 +16,60 @@ async def close_investment_item(item):
     return item
 
 
-async def check_for_avalaible_projects(
-        donation: DonationCreate,
-        session: AsyncSession = Depends(get_async_session),
-):
-    available_projects = await charity_project_crud.get_not_fullyinvested_objs(
+async def get_unclosed_investment_items(
+        item: str,
+        session: AsyncSession
+) -> list[Union[Donation, CharityProject]]:
+
+    item_crud = {
+        'charity_project': charity_project_crud,
+        'donation': donation_crud,
+    }
+
+    unclosed_items = await item_crud[item].get_not_fullyinvested_objs(
         session=session,
     )
-    donation = DonationCreateFull(**donation.dict())
-    projects_for_update = []
+    return unclosed_items
 
-    for project in available_projects:
-        if donation.fully_invested:
+
+async def invest(
+        new_invest_item: Union[CharityProject, Donation],
+        item_to_check: str,
+        session: AsyncSession = Depends(get_async_session),
+) -> Union[CharityProject, Donation]:
+
+    unclosed_invest_items = await get_unclosed_investment_items(
+        item=item_to_check,
+        session=session,
+    )
+
+    items_invested = []
+
+    for invt in unclosed_invest_items:
+        if new_invest_item.fully_invested:
             break
 
-        left_amount = donation.full_amount - donation.invested_amount
+        required_amount = (new_invest_item.full_amount
+                           - new_invest_item.invested_amount)
 
-        project_rqd_amnt = project.full_amount - project.invested_amount
+        invt_avail_amt = invt.full_amount - invt.invested_amount
 
-        if project_rqd_amnt >= left_amount:
-            await close_investment_item(donation)
-            if project_rqd_amnt == left_amount:
-                await close_investment_item(project)
+        if invt_avail_amt >= required_amount:
+            await close_investment_item(new_invest_item)
+            print(new_invest_item.fully_invested)
+            if invt_avail_amt == required_amount:
+                await close_investment_item(invt)
             else:
-                project.invested_amount += left_amount
+                invt.invested_amount += required_amount
         else:
-            await close_investment_item(project)
-            donation.invested_amount += project_rqd_amnt
+            await close_investment_item(invt)
+            new_invest_item.invested_amount += invt_avail_amt
 
-        projects_for_update.append(project)
+        items_invested.append(invt)
 
-    return donation, projects_for_update
+    session.add(new_invest_item)
+    session.add_all(items_invested)
+    await session.commit()
+    await session.refresh(new_invest_item)
+
+    return new_invest_item

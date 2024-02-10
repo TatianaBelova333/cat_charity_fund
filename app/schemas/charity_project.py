@@ -19,21 +19,18 @@ class CharityProjectBase(BaseModel):
         min_anystr_length = NAME_MIN_VAL
 
 
-class ProjectInvestement(CharityProjectBase):
+class CharityProjectDB(CharityProjectBase):
+    id: int
     invested_amount: int = 0
     fully_invested: bool = False
     create_date: Optional[datetime]
     close_date: Optional[datetime] = None
 
-
-class CharityPrjectDB(ProjectInvestement):
-    id: int
-
     class Config:
         orm_mode = True
 
 
-class CharityPrjectCreate(BaseModel):
+class CharityProjectCreate(CharityProjectBase):
     name: str = Field(
         ...,
         max_length=NAME_MAX_VAL,
@@ -45,20 +42,6 @@ class CharityPrjectCreate(BaseModel):
         extra = Extra.forbid
         min_anystr_length = NAME_MIN_VAL
         anystr_strip_whitespace = True
-
-
-class CharityProjectFull(CharityProjectBase):
-    name: Optional[str] = Field(
-        None,
-        min_length=NAME_MIN_VAL,
-        max_length=NAME_MAX_VAL,
-    )
-    description: Optional[str]
-    full_amount: int = Field(gt=0)
-    invested_amount: int = 0
-    fully_invested: bool = False
-    create_date: Optional[datetime]
-    close_date: Optional[datetime] = None
 
 
 class CharityProjectUpdate(CharityProjectBase):
