@@ -94,8 +94,8 @@ async def check_proj_new_full_amnt_more_than_invst_amnt(
     new_full_amount = updated_project.full_amount
     current_invested_amount = current_project.invested_amount
 
-    if (new_full_amount is not None
-            and new_full_amount < current_invested_amount):
+    if (new_full_amount is not None and
+            new_full_amount < current_invested_amount):
         raise HTTPException(
             status_code=HTTPStatus.BAD_REQUEST,
             detail=(('Нелья установить значение full_amount '

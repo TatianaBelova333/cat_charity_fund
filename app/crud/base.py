@@ -61,7 +61,7 @@ class CRUDBase:
         """
         not_fullyinvested_objs = await session.execute(
             select(self.model).where(
-                self.model.fully_invested == False,
+                self.model.fully_invested.is_(False),
             ).order_by(self.model.create_date)
         )
         return not_fullyinvested_objs.scalars().all()

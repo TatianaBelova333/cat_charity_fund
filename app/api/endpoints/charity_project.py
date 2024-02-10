@@ -78,10 +78,10 @@ async def remove_charity_project(
 
 
 @router.patch(
-        '/{project_id}',
-        response_model=CharityProjectDB,
-        dependencies=[Depends(current_superuser)],
-    )
+    '/{project_id}',
+    response_model=CharityProjectDB,
+    dependencies=[Depends(current_superuser)],
+)
 async def update_charity_project(
         project_id: int,
         obj_in: CharityProjectUpdate,
@@ -95,8 +95,8 @@ async def update_charity_project(
     await check_for_name_duplicate(name=obj_in.name, session=session)
 
     await check_proj_new_full_amnt_more_than_invst_amnt(
-         current_project=charity_project,
-         updated_project=obj_in,
+        current_project=charity_project,
+        updated_project=obj_in,
     )
 
     charity_project = await charity_project_crud.update(

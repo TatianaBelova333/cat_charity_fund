@@ -16,8 +16,8 @@ class CRUDDonation(CRUDBase):
         user_donations = await session.execute(
             select(Donation).where(
                 Donation.user_id == user.id
-                )
             )
+        )
 
         user_donations = user_donations.scalars().all()
 

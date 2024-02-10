@@ -49,8 +49,8 @@ async def invest(
         if new_invest_item.fully_invested:
             break
 
-        required_amount = (new_invest_item.full_amount
-                           - new_invest_item.invested_amount)
+        required_amount = (new_invest_item.full_amount -
+                           new_invest_item.invested_amount)
 
         invt_avail_amt = item.full_amount - item.invested_amount
 
