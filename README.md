@@ -5,6 +5,12 @@
 An API application for raising funds for charity projects. \
 All users may see charity projects. Only registered users may make untied donations which automatically go to opened charity projects (First In, First Out). Only superusers may create or update charity projects.
 
+## Technologies
+* fastapi-users-db-sqlalchemy==4.0.3
+* fastapi-users[sqlalchemy]==10.0.4
+* fastapi==0.78.0
+* pydantic==1.9.1
+* sqlalchemy==1.4.36
 
 ## Installation
 - Clone the repository
